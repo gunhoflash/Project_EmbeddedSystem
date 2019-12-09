@@ -12,23 +12,24 @@ class Image:
     def Process(self):
     #이미지를 흑백으로 변환한 뒤 Threshold 값을 기준으로 0 또는 1로 값을 정한다
         imgray = cv2.cvtColor(self.image,cv2.COLOR_BGR2GRAY) #Convert to Gray Scale
-        ret, thresh = cv2.threshold(imgray,100,255,cv2.THRESH_BINARY_INV) #Get Threshold
-
-        self.contours, _ = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)[-2:] #Get contour
         
+        self.contourCenterX = -1000
+        
+        ret, thresh = cv2.threshold(imgray,100,255,cv2.THRESH_BINARY_INV) #Get Threshold
+        self.contours, _ = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)[-2:] #Get contour
         self.prev_MC = self.MainContour
+        
+        self.height, self.width  = self.image.shape[:2]
+        self.middleX = int(self.width/2) #Get X coordenate of the middle point
+        self.middleY = int(self.height/2) #Get Y coordenate of the middle point
+            
         if self.contours:
             self.MainContour = max(self.contours, key=cv2.contourArea)
         
-            self.height, self.width  = self.image.shape[:2]
-
-            self.middleX = int(self.width/2) #Get X coordenate of the middle point
-            self.middleY = int(self.height/2) #Get Y coordenate of the middle point
-            
             self.prev_cX = self.contourCenterX
             if self.getContourCenter(self.MainContour) != 0:
                 self.contourCenterX = self.getContourCenter(self.MainContour)[0]
-                if abs(self.prev_cX-self.contourCenterX) > 5:
+                if not self.prev_cX == -1000 and abs(self.prev_cX-self.contourCenterX) > 5:
                     self.correctMainContour(self.prev_cX)
             else:
                 self.contourCenterX = 0
